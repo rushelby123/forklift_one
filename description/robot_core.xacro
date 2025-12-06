@@ -4,20 +4,38 @@
     <xacro:include filename="inertial_macros.xacro"/>
 
 
-    <xacro:property name="chassis_length" value="0.335"/>
+    <xacro:property name="chassis_length" value="0.4"/>
     <xacro:property name="chassis_width" value="0.265"/>
-    <xacro:property name="chassis_height" value="0.138"/>
+    <xacro:property name="chassis_height" value="0.2"/>
     <xacro:property name="chassis_mass" value="1.0"/>
-    <xacro:property name="wheel_radius" value="0.033"/>
+    <xacro:property name="wheel_radius" value="0.05"/>
     <xacro:property name="wheel_thickness" value="0.026"/>
     <xacro:property name="wheel_mass" value="0.05"/>
-    <xacro:property name="wheel_offset_x" value="0.226"/>
-    <xacro:property name="wheel_offset_y" value="0.1485"/>
-    <xacro:property name="wheel_offset_z" value="0.01"/>
-    <xacro:property name="caster_wheel_radius" value="0.01"/>
-    <xacro:property name="caster_wheel_mass" value="0.01"/>
-    <xacro:property name="caster_wheel_offset_x" value="0.075"/>
-    <xacro:property name="caster_wheel_offset_z" value="${wheel_offset_z - wheel_radius + caster_wheel_radius}"/>
+    <xacro:property name="rear_wheel_offset_x" value="0.3"/>
+    <xacro:property name="rear_wheel_offset_y" value="0.2"/>
+    <xacro:property name="rear_wheel_offset_z" value="0.01"/>
+    <xacro:property name="front_wheel_offset_x" value="-0.2"/>
+    <xacro:property name="front_wheel_offset_y" value="0.2"/>
+    <xacro:property name="front_wheel_offset_z" value="0.01"/>
+    <xacro:property name="fork_length" value="0.25"/>
+    <xacro:property name="fork_width" value="0.02"/>
+    <xacro:property name="fork_thickness" value="0.02"/>
+    <xacro:property name="fork_mass" value="0.3"/>
+    <xacro:property name="fork_lift_mass" value="1.0"/>
+    <xacro:property name="mast_height" value="0.5"/>
+    <xacro:property name="mast_width" value="0.02"/>
+    <xacro:property name="mast_mass" value="0.3"/>
+    <xacro:property name="carriage_length" value="0.025"/>
+    <xacro:property name="carriage_width" value="0.2"/>
+    <xacro:property name="carriage_thickness" value="0.02"/>
+    <xacro:property name="carriage_mass" value="0.2"/>
+
+    <!-- derived sizes -->
+    <xacro:property name="cabin_x" value="${chassis_length/2}"/>
+    <xacro:property name="cabin_y" value="${chassis_width/2}"/>
+    <xacro:property name="cabin_z" value="${chassis_height*2}"/>
+    <xacro:property name="cabin_cx" value="${chassis_length/2}"/> 
+    <xacro:property name="cabin_cz" value="${cabin_z/2}"/>
 
     <material name="white">
         <color rgba="1 1 1 1" />
@@ -62,7 +80,7 @@
     <joint name="chassis_joint" type="fixed">
         <parent link="base_link"/>
         <child link="chassis"/>
-        <origin xyz="${-wheel_offset_x} 0 ${-wheel_offset_z}"/>
+        <origin xyz="${-rear_wheel_offset_x} 0 ${-rear_wheel_offset_z}"/>
     </joint>
 
     <link name="chassis">
@@ -88,16 +106,61 @@
         <material>Gazebo/Orange</material>
     </gazebo>
 
-    <!-- LEFT WHEEL LINK -->
-
-    <joint name="left_wheel_joint" type="continuous">
+    <!-- CABIN LINK -->
+    <joint name="cabin_joint" type="fixed">
         <parent link="base_link"/>
-        <child link="left_wheel"/>
-        <origin xyz="0 ${wheel_offset_y} 0" rpy="-${pi/2} 0 0" />
+        <child link="cabin"/>
+        <origin xyz="${-rear_wheel_offset_x} 0 ${-rear_wheel_offset_z}"/>
+    </joint>
+
+    <link name="cabin">
+
+        <visual>
+            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${cabin_x} ${cabin_y} ${cabin_z}"/>
+            </geometry>
+            <material name="orange"/>
+        </visual>
+
+        <collision>
+            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${cabin_x} ${cabin_y} ${cabin_z}"/>
+            </geometry>
+        </collision>
+
+        <!-- inertial: place COM at geometric center of the cabin box -->
+        <xacro:inertial_box mass="0.5" x="${cabin_x}" y="${cabin_y}" z="${cabin_z}">
+            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <!-- LEFT REAR STEERING JOINT -->
+    <joint name="left_rear_steer_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="left_rear_wheel_steer"/>
+        <origin xyz="0 ${rear_wheel_offset_y} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-0.5" upper="0.5" effort="5.0" velocity="1.0"/>
+    </joint>
+
+
+    <link name="left_rear_wheel_steer">
+        <visual>
+            <geometry><box size="0.01 0.01 0.01"/></geometry> <!-- dummy link -->
+        </visual>
+    </link>
+
+    <!-- LEFT REAR WHEEL -->
+    <joint name="left_rear_wheel_joint" type="continuous">
+        <parent link="left_rear_wheel_steer"/>
+        <child link="left_rear_wheel"/>
+        <origin xyz="0 0 0" rpy="-${pi/2} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <link name="left_wheel">
+    <link name="left_rear_wheel">
         <visual>
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
@@ -106,7 +169,7 @@
         </visual>
         <collision>
             <geometry>
-                <sphere radius="${wheel_radius}"/>
+                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
             </geometry>
         </collision>
         <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
@@ -114,23 +177,32 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="left_wheel">
-        <material>Gazebo/Blue</material>
-    </gazebo>
-
-
-
-
-    <!-- RIGHT WHEEL LINK -->
-
-    <joint name="right_wheel_joint" type="continuous">
+    <!-- RIGHT REAR STEERING JOINT -->
+    <joint name="right_rear_steer_joint" type="revolute">
         <parent link="base_link"/>
-        <child link="right_wheel"/>
-        <origin xyz="0 ${-wheel_offset_y} 0" rpy="${pi/2} 0 0" />
+        <child link="right_rear_wheel_steer"/>
+        <origin xyz="0 ${-rear_wheel_offset_y} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-0.5" upper="0.5" effort="5.0" velocity="1.0"/>
+    </joint>
+
+
+    <link name="right_rear_wheel_steer">
+        <visual>
+            <geometry><box size="0.01 0.01 0.01"/></geometry> <!-- dummy link -->
+        </visual>
+    </link>
+
+    <!-- RIGHT REAR WHEEL LINK -->
+
+    <joint name="right_rear_wheel_joint" type="continuous">
+        <parent link="right_rear_wheel_steer"/>
+        <child link="right_rear_wheel"/>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
         <axis xyz="0 0 -1"/>
     </joint>
 
-    <link name="right_wheel">
+    <link name="right_rear_wheel">
         <visual>
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
@@ -147,41 +219,180 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="right_wheel">
+    <gazebo reference="right_rear_wheel">
         <material>Gazebo/Blue</material>
     </gazebo>
 
 
-    <!-- CASTER WHEEL LINK -->
+    <!-- LEFT FRONT WHEEL LINK -->
 
-    <joint name="caster_wheel_joint" type="fixed">
-        <parent link="chassis"/>
-        <child link="caster_wheel"/>
-        <origin xyz="${caster_wheel_offset_x} 0 ${caster_wheel_offset_z}"/>
+    <joint name="left_front_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_front_wheel"/>
+        <origin xyz="${front_wheel_offset_x} ${front_wheel_offset_y} 0" rpy="-${pi/2} 0 0" />
+        <axis xyz="0 0 1"/>
     </joint>
 
-
-    <link name="caster_wheel">
+    <link name="left_front_wheel">
         <visual>
             <geometry>
-                <sphere radius="${caster_wheel_radius}"/>
+                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
             </geometry>
-            <material name="white"/>
+            <material name="blue"/>
         </visual>
         <collision>
             <geometry>
-                <sphere radius="${caster_wheel_radius}"/>
+                <sphere radius="${wheel_radius}"/>
             </geometry>
         </collision>
-        <xacro:inertial_sphere mass="${caster_wheel_mass}" radius="${caster_wheel_radius}">
+        <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
-        </xacro:inertial_sphere>
+        </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="caster_wheel">
-        <material>Gazebo/White</material>
-        <mu1 value="0.001"/>
-        <mu2 value="0.001"/>
+    <gazebo reference="left_front_wheel">
+        <material>Gazebo/Blue</material>
     </gazebo>
+
+
+    <!-- RIGHT FRONT WHEEL LINK -->
+
+    <joint name="right_front_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_front_wheel"/>
+        <origin xyz="${front_wheel_offset_x} ${-front_wheel_offset_y} 0" rpy="${pi/2} 0 0" />
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+    <link name="right_front_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${wheel_radius}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="right_front_wheel">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+    <!-- MAST LINK -->
+
+
+    <link name="mast">
+        <visual>
+            <geometry>
+                <box size="${mast_width} ${mast_width} ${mast_height}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${mast_width} ${mast_width} ${mast_height}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${mast_mass}" x="${mast_width}" y="${mast_width}" z="${mast_height}">
+            <origin xyz="${mast_width/2} 0 ${mast_height/2}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="mast_joint" type="fixed">
+        <parent link="chassis"/>
+        <child link="mast"/>
+        <origin xyz="${-mast_width/2} 0 ${mast_height/2}" rpy="0 0 0"/>
+    </joint>
+
+
+    <!-- FORK CARRIAGE -->
+
+
+    <link name="fork_carriage">
+        <visual>
+            <geometry>
+                <box size="${carriage_length} ${carriage_width} ${carriage_thickness}"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${carriage_length} ${carriage_width} ${carriage_thickness}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${carriage_mass}" x="${carriage_length}" y="${carriage_width}" z="${carriage_thickness}">
+            <origin xyz="${carriage_length/2} 0 ${carriage_thickness/2}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="fork_carriage_joint" type="prismatic">
+        <parent link="mast"/>
+        <child link="fork_carriage"/>
+        <origin xyz="-${mast_width/2 + carriage_length/2} 0 ${-mast_height/2+carriage_thickness}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="0" upper="${mast_height}" effort="10" velocity="0.1"/>
+    </joint>
+
+
+    <!-- LEFT FORK -->
+
+
+    <link name="fork_left">
+        <visual>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${fork_mass}" x="${fork_length}" y="${fork_width}" z="${fork_thickness}">
+        <origin xyz="${fork_length/2} 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    <joint name="fork_left_joint" type="fixed">
+        <parent link="fork_carriage"/>
+        <child link="fork_left"/>
+        <origin xyz="${-fork_length/2+carriage_length/2} ${(carriage_width/2+fork_width)} 0" rpy="0 0 ${pi}"/>
+    </joint>
+
+
+    <!-- RIGHT FORK -->
+
+
+    <link name="fork_right">
+        <visual>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${fork_mass}" x="${fork_length}" y="${fork_width}" z="${fork_thickness}">
+        <origin xyz="${fork_length/2} 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    <joint name="fork_right_joint" type="fixed">
+        <parent link="fork_carriage"/>
+        <child link="fork_right"/>
+        <origin xyz="${-fork_length/2+carriage_length/2} ${-(carriage_width/2+fork_width)} 0" rpy="0 0 ${pi}"/>
+    </joint>
+
+
 
 </robot>
