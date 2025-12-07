@@ -6,7 +6,7 @@
 
     <xacro:property name="chassis_length" value="0.4"/>
     <xacro:property name="chassis_width" value="0.265"/>
-    <xacro:property name="chassis_height" value="0.2"/>
+    <xacro:property name="chassis_height" value="0.15"/>
     <xacro:property name="chassis_mass" value="5"/>
     <xacro:property name="wheel_radius" value="0.05"/>
     <xacro:property name="wheel_thickness" value="0.026"/>
@@ -101,33 +101,32 @@
     <!-- CABIN LINK -->
 
 
-    <!-- <joint name="cabin_joint" type="fixed">
-        <parent link="base_link"/>
+    <joint name="cabin_joint" type="fixed">
+        <parent link="chassis"/>
         <child link="cabin"/>
-        <origin xyz="${-rear_wheel_offset_x} 0 ${-rear_wheel_offset_z}"/>
+        <origin xyz="0 0 0"/>
     </joint>
 
     <link name="cabin">
 
         <visual>
-            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
+            <origin xyz="${chassis_length*0.6} 0 ${chassis_height*1.5}" rpy="0 0 0"/>
             <geometry>
-                <box size="${cabin_x} ${cabin_y} ${cabin_z}"/>
+                <box size="${chassis_length/2} ${chassis_width/2} ${chassis_height*2}"/>
             </geometry>
             <material name="orange"/>
         </visual>
 
         <collision>
-            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
             <geometry>
-                <box size="${cabin_x} ${cabin_y} ${cabin_z}"/>
+                <box size="${chassis_length/2} ${chassis_width/2} ${chassis_height*2}"/>
             </geometry>
         </collision>
-ì
-        <xacro:inertial_box mass="0.5" x="${cabin_x}" y="${cabin_y}" z="${cabin_z}">
-            <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
+
+        <xacro:inertial_box mass="1.0" x="${chassis_length/2}" y="${chassis_width/2}" z="${chassis_height*2}">
+            <origin xyz="${chassis_length*0.6} 0 ${chassis_height*1.5}" rpy="0 0 0"/>
         </xacro:inertial_box>
-    </link> -->
+    </link>
 
 
     <!-- RIGHT REAR STEERING JOINT -->

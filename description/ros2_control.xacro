@@ -9,6 +9,7 @@
             <plugin>gz_ros2_control/GazeboSimSystem</plugin>
         </hardware>
 
+        <!-- Front wheels (driving) -->
         <joint name="left_front_wheel_joint">
             <command_interface name="velocity"/>
             <state_interface name="position"/>
@@ -21,29 +22,37 @@
             <state_interface name="velocity"/>
         </joint>
 
+        <!-- Rear wheels (driven by chassis if fixed, but normally they rotate) -->
         <joint name="left_rear_wheel_joint">
+            <command_interface name="velocity"/>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
         <joint name="right_rear_wheel_joint">
+            <command_interface name="velocity"/>
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
 
+        <!-- Steering joints -->
         <joint name="right_rear_steer_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
         <joint name="left_rear_steer_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
+        <!-- Lift mechanism -->
         <joint name="fork_carriage_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
+            <state_interface name="velocity"/>
         </joint>
 
     </ros2_control>

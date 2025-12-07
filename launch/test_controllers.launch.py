@@ -83,10 +83,27 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
-    delayed_joint_broad_spawner = RegisterEventHandler(
+    # Spawn controllers AFTER the robot is spawned
+    ackermann_steering_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["ackermann_steering_controller"],
+        output="screen",
+        parameters=[{'use_sim_time': use_sim_time}]
+    )
+
+    # wheel_velocity_controller_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["wheel_velocity_controller"],
+    #     output="screen",
+    #     parameters=[{'use_sim_time': use_sim_time}]
+    # )
+
+    delayed_controllers_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_entity,
-            on_exit=[joint_broad_spawner],
+            on_exit=[joint_broad_spawner, ackermann_steering_controller],
         )
     )
 
@@ -111,19 +128,12 @@ def generate_launch_description():
         ]
     )
 
-    ros_gz_image_bridge = Node(
-        package="ros_gz_image",
-        executable="image_bridge",
-        arguments=["/camera/image_raw"]
-    )
-
     return LaunchDescription([
         declare_use_sim_time,
         node_rviz,
         robot_state_publisher_node,
         gazebo,
         spawn_entity,
-        delayed_joint_broad_spawner,
-        ros_gz_bridge,
-        ros_gz_image_bridge
+        delayed_controllers_spawner,
+        ros_gz_bridge
     ])
