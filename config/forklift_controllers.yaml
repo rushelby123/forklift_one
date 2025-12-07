@@ -1,0 +1,33 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+    # use_sim_time: true
+
+    joint_broad:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+
+
+# TODO!
+#     # Steering rear wheels angle
+#     rear_steering_controller:
+#       type: forward_command_controller/ForwardCommandController
+
+#     # Drive front wheels velocity
+#     wheel_velocity_controller:
+#       type: forward_command_controller/forward_command_controller
+
+
+# rear_steering_controller:
+#   ros__parameters:
+#     joints:
+#       - left_rear_steer_joint
+#       - right_rear_steer_joint
+#     interface_name: position
+
+# wheel_velocity_controller:
+#   ros__parameters:
+#     joints:
+#       - left_front_wheel_joint
+#       - right_front_wheel_joint
+#     interface_name: velocity

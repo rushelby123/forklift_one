@@ -7,35 +7,26 @@
     <xacro:property name="chassis_length" value="0.4"/>
     <xacro:property name="chassis_width" value="0.265"/>
     <xacro:property name="chassis_height" value="0.2"/>
-    <xacro:property name="chassis_mass" value="1.0"/>
+    <xacro:property name="chassis_mass" value="5"/>
     <xacro:property name="wheel_radius" value="0.05"/>
     <xacro:property name="wheel_thickness" value="0.026"/>
     <xacro:property name="wheel_mass" value="0.05"/>
     <xacro:property name="rear_wheel_offset_x" value="0.3"/>
     <xacro:property name="rear_wheel_offset_y" value="0.2"/>
-    <xacro:property name="rear_wheel_offset_z" value="0.01"/>
-    <xacro:property name="front_wheel_offset_x" value="-0.2"/>
+    <xacro:property name="front_wheel_offset_x" value="0.1"/>
     <xacro:property name="front_wheel_offset_y" value="0.2"/>
-    <xacro:property name="front_wheel_offset_z" value="0.01"/>
     <xacro:property name="fork_length" value="0.25"/>
     <xacro:property name="fork_width" value="0.02"/>
     <xacro:property name="fork_thickness" value="0.02"/>
-    <xacro:property name="fork_mass" value="0.3"/>
+    <xacro:property name="fork_mass" value="0.01"/>
     <xacro:property name="fork_lift_mass" value="1.0"/>
     <xacro:property name="mast_height" value="0.5"/>
     <xacro:property name="mast_width" value="0.02"/>
-    <xacro:property name="mast_mass" value="0.3"/>
+    <xacro:property name="mast_mass" value="0.1"/>
     <xacro:property name="carriage_length" value="0.025"/>
     <xacro:property name="carriage_width" value="0.2"/>
     <xacro:property name="carriage_thickness" value="0.02"/>
-    <xacro:property name="carriage_mass" value="0.2"/>
-
-    <!-- derived sizes -->
-    <xacro:property name="cabin_x" value="${chassis_length/2}"/>
-    <xacro:property name="cabin_y" value="${chassis_width/2}"/>
-    <xacro:property name="cabin_z" value="${chassis_height*2}"/>
-    <xacro:property name="cabin_cx" value="${chassis_length/2}"/> 
-    <xacro:property name="cabin_cz" value="${cabin_z/2}"/>
+    <xacro:property name="carriage_mass" value="0.1"/>
 
     <material name="white">
         <color rgba="1 1 1 1" />
@@ -80,7 +71,7 @@
     <joint name="chassis_joint" type="fixed">
         <parent link="base_link"/>
         <child link="chassis"/>
-        <origin xyz="${-rear_wheel_offset_x} 0 ${-rear_wheel_offset_z}"/>
+        <origin xyz="${-rear_wheel_offset_x} 0 ${wheel_radius}"/>
     </joint>
 
     <link name="chassis">
@@ -105,9 +96,12 @@
     <gazebo reference="chassis">
         <material>Gazebo/Orange</material>
     </gazebo>
+    
 
     <!-- CABIN LINK -->
-    <joint name="cabin_joint" type="fixed">
+
+
+    <!-- <joint name="cabin_joint" type="fixed">
         <parent link="base_link"/>
         <child link="cabin"/>
         <origin xyz="${-rear_wheel_offset_x} 0 ${-rear_wheel_offset_z}"/>
@@ -129,59 +123,20 @@
                 <box size="${cabin_x} ${cabin_y} ${cabin_z}"/>
             </geometry>
         </collision>
-
-        <!-- inertial: place COM at geometric center of the cabin box -->
+ì
         <xacro:inertial_box mass="0.5" x="${cabin_x}" y="${cabin_y}" z="${cabin_z}">
             <origin xyz="${cabin_cx} 0 ${cabin_cz}" rpy="0 0 0"/>
         </xacro:inertial_box>
-    </link>
+    </link> -->
 
-    <!-- LEFT REAR STEERING JOINT -->
-    <joint name="left_rear_steer_joint" type="revolute">
-        <parent link="base_link"/>
-        <child link="left_rear_wheel_steer"/>
-        <origin xyz="0 ${rear_wheel_offset_y} 0" rpy="0 0 0"/>
-        <axis xyz="0 0 1"/>
-        <limit lower="-0.5" upper="0.5" effort="5.0" velocity="1.0"/>
-    </joint>
-
-
-    <link name="left_rear_wheel_steer">
-        <visual>
-            <geometry><box size="0.01 0.01 0.01"/></geometry> <!-- dummy link -->
-        </visual>
-    </link>
-
-    <!-- LEFT REAR WHEEL -->
-    <joint name="left_rear_wheel_joint" type="continuous">
-        <parent link="left_rear_wheel_steer"/>
-        <child link="left_rear_wheel"/>
-        <origin xyz="0 0 0" rpy="-${pi/2} 0 0"/>
-        <axis xyz="0 0 1"/>
-    </joint>
-
-    <link name="left_rear_wheel">
-        <visual>
-            <geometry>
-                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
-            </geometry>
-            <material name="blue"/>
-        </visual>
-        <collision>
-            <geometry>
-                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-        </xacro:inertial_cylinder>
-    </link>
 
     <!-- RIGHT REAR STEERING JOINT -->
+
+
     <joint name="right_rear_steer_joint" type="revolute">
-        <parent link="base_link"/>
+        <parent link="chassis"/>
         <child link="right_rear_wheel_steer"/>
-        <origin xyz="0 ${-rear_wheel_offset_y} 0" rpy="0 0 0"/>
+        <origin xyz="${rear_wheel_offset_x} ${rear_wheel_offset_y} 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-0.5" upper="0.5" effort="5.0" velocity="1.0"/>
     </joint>
@@ -191,15 +146,25 @@
         <visual>
             <geometry><box size="0.01 0.01 0.01"/></geometry> <!-- dummy link -->
         </visual>
+        <collision>
+            <geometry><box size="0.01 0.01 0.01"/></geometry> 
+        </collision>
+        <inertial>
+            <mass value="0.01"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        </inertial>
     </link>
 
-    <!-- RIGHT REAR WHEEL LINK -->
+
+    <!-- RIGHT REAR WHEEL -->
+
 
     <joint name="right_rear_wheel_joint" type="continuous">
         <parent link="right_rear_wheel_steer"/>
         <child link="right_rear_wheel"/>
-        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
-        <axis xyz="0 0 -1"/>
+        <origin xyz="0 0 0" rpy="-${pi/2} 0 0"/>
+        <axis xyz="0 0 1"/>
     </joint>
 
     <link name="right_rear_wheel">
@@ -211,7 +176,7 @@
         </visual>
         <collision>
             <geometry>
-                <sphere radius="${wheel_radius}"/>
+                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
             </geometry>
         </collision>
         <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
@@ -219,21 +184,45 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="right_rear_wheel">
-        <material>Gazebo/Blue</material>
-    </gazebo>
+
+    <!-- LEFT REAR STEERING JOINT -->
 
 
-    <!-- LEFT FRONT WHEEL LINK -->
-
-    <joint name="left_front_wheel_joint" type="continuous">
-        <parent link="base_link"/>
-        <child link="left_front_wheel"/>
-        <origin xyz="${front_wheel_offset_x} ${front_wheel_offset_y} 0" rpy="-${pi/2} 0 0" />
+    <joint name="left_rear_steer_joint" type="revolute">
+        <parent link="chassis"/>
+        <child link="left_rear_wheel_steer"/>
+        <origin xyz="${rear_wheel_offset_x} ${-rear_wheel_offset_y} 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
+        <limit lower="-0.5" upper="0.5" effort="5.0" velocity="1.0"/>
     </joint>
 
-    <link name="left_front_wheel">
+
+    <link name="left_rear_wheel_steer">
+        <visual>
+            <geometry><box size="0.01 0.01 0.01"/></geometry> <!-- dummy link -->
+        </visual>
+        <collision>
+            <geometry><box size="0.01 0.01 0.01"/></geometry> 
+        </collision>
+        <inertial>
+            <mass value="0.01"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+        </inertial>
+    </link>
+
+
+    <!-- LEFT REAR WHEEL LINK -->
+
+
+    <joint name="left_rear_wheel_joint" type="continuous">
+        <parent link="left_rear_wheel_steer"/>
+        <child link="left_rear_wheel"/>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+    <link name="left_rear_wheel">
         <visual>
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
@@ -250,18 +239,19 @@
         </xacro:inertial_cylinder>
     </link>
 
-    <gazebo reference="left_front_wheel">
+    <gazebo reference="left_rear_wheel">
         <material>Gazebo/Blue</material>
     </gazebo>
 
 
-    <!-- RIGHT FRONT WHEEL LINK -->
+    <!-- right FRONT WHEEL LINK -->
+
 
     <joint name="right_front_wheel_joint" type="continuous">
-        <parent link="base_link"/>
+        <parent link="chassis"/>
         <child link="right_front_wheel"/>
-        <origin xyz="${front_wheel_offset_x} ${-front_wheel_offset_y} 0" rpy="${pi/2} 0 0" />
-        <axis xyz="0 0 -1"/>
+        <origin xyz="${front_wheel_offset_x} ${front_wheel_offset_y} 0" rpy="-${pi/2} 0 0" />
+        <axis xyz="0 0 1"/>
     </joint>
 
     <link name="right_front_wheel">
@@ -282,6 +272,37 @@
     </link>
 
     <gazebo reference="right_front_wheel">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+    <!-- left FRONT WHEEL LINK -->
+
+    <joint name="left_front_wheel_joint" type="continuous">
+        <parent link="chassis"/>
+        <child link="left_front_wheel"/>
+        <origin xyz="${front_wheel_offset_x} ${-front_wheel_offset_y} 0" rpy="${pi/2} 0 0" />
+        <axis xyz="0 0 -1"/>
+    </joint>
+
+    <link name="left_front_wheel">
+        <visual>
+            <geometry>
+                <cylinder radius="${wheel_radius}" length="${wheel_thickness}"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${wheel_radius}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="${wheel_mass}" length="${wheel_thickness}" radius="${wheel_radius}">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
+
+    <gazebo reference="left_front_wheel">
         <material>Gazebo/Blue</material>
     </gazebo>
 
@@ -342,33 +363,7 @@
     </joint>
 
 
-    <!-- LEFT FORK -->
-
-
-    <link name="fork_left">
-        <visual>
-            <geometry>
-                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
-            </geometry>
-            <material name="black"/>
-        </visual>
-        <collision>
-            <geometry>
-                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
-            </geometry>
-        </collision>
-        <xacro:inertial_box mass="${fork_mass}" x="${fork_length}" y="${fork_width}" z="${fork_thickness}">
-        <origin xyz="${fork_length/2} 0 0"/>
-        </xacro:inertial_box>
-    </link>
-    <joint name="fork_left_joint" type="fixed">
-        <parent link="fork_carriage"/>
-        <child link="fork_left"/>
-        <origin xyz="${-fork_length/2+carriage_length/2} ${(carriage_width/2+fork_width)} 0" rpy="0 0 ${pi}"/>
-    </joint>
-
-
-    <!-- RIGHT FORK -->
+    <!-- right FORK -->
 
 
     <link name="fork_right">
@@ -390,6 +385,32 @@
     <joint name="fork_right_joint" type="fixed">
         <parent link="fork_carriage"/>
         <child link="fork_right"/>
+        <origin xyz="${-fork_length/2+carriage_length/2} ${(carriage_width/2+fork_width)} 0" rpy="0 0 ${pi}"/>
+    </joint>
+
+
+    <!-- left FORK -->
+
+
+    <link name="fork_left">
+        <visual>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${fork_length} ${fork_width} ${fork_thickness}"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="${fork_mass}" x="${fork_length}" y="${fork_width}" z="${fork_thickness}">
+        <origin xyz="${fork_length/2} 0 0"/>
+        </xacro:inertial_box>
+    </link>
+    <joint name="fork_left_joint" type="fixed">
+        <parent link="fork_carriage"/>
+        <child link="fork_left"/>
         <origin xyz="${-fork_length/2+carriage_length/2} ${-(carriage_width/2+fork_width)} 0" rpy="0 0 ${pi}"/>
     </joint>
 
