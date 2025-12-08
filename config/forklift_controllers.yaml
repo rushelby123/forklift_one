@@ -15,19 +15,19 @@ ackermann_steering_controller:
     # REQUIRED JOINT NAMES
     # ─────────────────────────────
     traction_joints_names:
-      - left_front_wheel_joint
       - right_front_wheel_joint
+      - left_front_wheel_joint
 
     steering_joints_names:
-      - left_rear_steer_joint
       - right_rear_steer_joint
+      - left_rear_steer_joint
 
     # ─────────────────────────────
     # REQUIRED GEOMETRY PARAMETERS
     # ─────────────────────────────
     wheelbase: 0.40
-    traction_wheels_radius: 0.05
-    steering_wheels_radius: 0.05
+    traction_wheels_radius: 0.1
+    steering_wheels_radius: 0.1
 
     # ─────────────────────────────
     # ODOMETRY
