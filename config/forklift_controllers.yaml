@@ -25,9 +25,11 @@ ackermann_steering_controller:
     # ─────────────────────────────
     # REQUIRED GEOMETRY PARAMETERS
     # ─────────────────────────────
-    wheelbase: 0.40
-    traction_wheels_radius: 0.1
-    steering_wheels_radius: 0.1
+    wheelbase: 0.215
+    traction_track_width: 0.150
+    rear_wheel_track: 0.140
+    traction_wheels_radius: 0.0425
+    steering_wheels_radius: 0.0375
 
     # ─────────────────────────────
     # ODOMETRY
