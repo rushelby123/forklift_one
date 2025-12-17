@@ -3,40 +3,52 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
-
 from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription
 
 
 def generate_launch_description():
 
     package_name = 'forklift_one'
 
-    # Launch argument: use simulation time
+    # -----------------------
+    # Launch arguments
+    # -----------------------
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
     declare_use_sim_time = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
         description='Use simulation time'
     )
-    use_sim_time = LaunchConfiguration('use_sim_time')
 
+    # -----------------------
     # Paths
+    # -----------------------
     pkg_path = get_package_share_directory(package_name)
+
     xacro_file = os.path.join(pkg_path, 'description', 'robot.urdf.xacro')
     rviz_config_file = os.path.join(pkg_path, 'config', 'test_design.rviz')
 
-    # Convert XACRO → URDF on the fly
+    # Explicit world path (recommended by docs)
+    world_file = os.path.join(
+        get_package_share_directory('forklift_one'),
+        'config',
+        'empty.sdf'
+    )
+
+    # -----------------------
+    # Robot description
+    # -----------------------
     robot_description = Command([
         'xacro ', xacro_file,
         ' sim_mode:=', use_sim_time
     ])
 
-    # Robot state publisher
-    robot_state_publisher_node = Node(
+    robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
@@ -46,7 +58,9 @@ def generate_launch_description():
         }]
     )
 
-    # Launch Gazebo (Ignition) via ros_gz_sim
+    # -----------------------
+    # Gazebo (doc-style)
+    # -----------------------
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -56,84 +70,94 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            'gz_args': '-r empty.sdf',
+            # Docs recommend passing the world explicitly
+            'gz_args': f'-r {world_file}',
             'use_sim_time': use_sim_time
         }.items()
     )
 
-    # Spawn the robot in Gazebo
+    # -----------------------
+    # Spawn robot (URDF)
+    # -----------------------
     spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
+        output='screen',
         arguments=[
             '-string', robot_description,
             '-name', 'forklift',
-            '-allow_renaming', 'true'
+            '-allow_renaming', 'false'
         ],
-        output='screen',
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
-    # Spawn joint_state_broadcaster AFTER the robot is spawned
-    joint_broad_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_broad"],
-        output="screen",
-        parameters=[{'use_sim_time': use_sim_time}]
+    # -----------------------
+    # Controllers (after spawn)
+    # -----------------------
+    joint_state_broadcaster = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_broad'],
+        output='screen'
     )
 
-    # Spawn controllers AFTER the robot is spawned
-    ackermann_steering_controller = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["ackermann_steering_controller"],
-        output="screen",
-        parameters=[{'use_sim_time': use_sim_time}]
+    ackermann_controller = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['ackermann_steering_controller'],
+        output='screen'
     )
 
-    # wheel_velocity_controller_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["wheel_velocity_controller"],
-    #     output="screen",
-    #     parameters=[{'use_sim_time': use_sim_time}]
-    # )
-
-    delayed_controllers_spawner = RegisterEventHandler(
+    delayed_controller_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_entity,
-            on_exit=[joint_broad_spawner, ackermann_steering_controller],
+            on_exit=[
+                joint_state_broadcaster,
+                ackermann_controller
+            ],
         )
     )
 
-    # RViz2 visualization
-    node_rviz = Node(
+    # -----------------------
+    # RViz
+    # -----------------------
+    rviz = Node(
         package='rviz2',
         executable='rviz2',
-        name='rviz2',
         output='screen',
         arguments=['-d', rviz_config_file],
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
-    bridge_params = os.path.join(get_package_share_directory(package_name),'config','gz_bridge.yaml')
-    ros_gz_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=[
-            '--ros-args',
-            '-p',
-            f'config_file:={bridge_params}',
-        ]
+    # -----------------------
+    # ROS <-> Gazebo bridge
+    # -----------------------
+    bridge_config = os.path.join(
+        pkg_path,
+        'config',
+        'gz_bridge.yaml'
     )
 
+    ros_gz_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[            
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_config}'
+        ],
+        output='screen'
+    )
+
+    # -----------------------
+    # Launch description
+    # -----------------------
     return LaunchDescription([
         declare_use_sim_time,
-        node_rviz,
-        robot_state_publisher_node,
         gazebo,
+        robot_state_publisher,
         spawn_entity,
-        delayed_controllers_spawner,
-        ros_gz_bridge
+        delayed_controller_spawner,
+        ros_gz_bridge,
+        rviz,
     ])
