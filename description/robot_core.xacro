@@ -141,7 +141,7 @@
     <link name="right_rear_wheel">
         <visual>
             <geometry>
-                <cylinder radius="${front_wheel_radius}" length="${wheel_thickness}"/>
+                <cylinder radius="${rear_wheel_radius}" length="${wheel_thickness}"/>
             </geometry>
             <material name="blue"/>
         </visual>

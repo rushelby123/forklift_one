@@ -43,3 +43,16 @@ ackermann_steering_controller:
     reference_limit_min: -1.0
     reference_limit_max: 1.0
 
+    # 1. Map the Twist to the correct frame
+    base_frame_id: base_link
+    odom_frame_id: odom
+
+    # 2. Tell the controller which interface to use
+    # Steering is usually Position, Traction is usually Velocity
+    steering_interface_name: position
+    traction_interface_name: velocity
+
+    # 3. Add this for teleop compatibility 
+    # This matches the 'stamped' command we used earlier
+    use_stamped_vel: true
+
