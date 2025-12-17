@@ -1,13 +1,26 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-    <joint name="camera_joint" type="fixed">
+    <xacro:property name="camera_name"   value="camera" />
+    <xacro:property name="update_rate"   value="10" />
+    <xacro:property name="horizontal_fov" value="1.089" />
+    <xacro:property name="img_width"     value="640" />
+    <xacro:property name="img_height"    value="480" />
+    <xacro:property name="img_format"    value="R8G8B8" />
+    <xacro:property name="near_clip"     value="0.05" />
+    <xacro:property name="far_clip"      value="8.0" />
+    
+    <xacro:property name="noise_mean"    value="0.0" />
+    <xacro:property name="noise_stddev"  value="0.007" />
+    <xacro:property name="distortion_k1" value="-0.1" />
+    <xacro:property name="distortion_k2" value="0.01" />
+    <xacro:property name="focal_length"  value="525" /> <joint name="${camera_name}_joint" type="fixed">
         <parent link="chassis"/>
-        <child link="camera_link"/>
+        <child link="${camera_name}_link"/>
         <origin xyz="0.0 0 0.4" rpy="0 0 ${pi}"/>
     </joint>
 
-    <link name="camera_link">
+    <link name="${camera_name}_link">
         <visual>
             <geometry>
                 <box size="0.010 0.03 0.03"/>
@@ -16,36 +29,61 @@
         </visual>
     </link>
 
-
-    <joint name="camera_optical_joint" type="fixed">
-        <parent link="camera_link"/>
-        <child link="camera_link_optical"/>
+    <joint name="${camera_name}_optical_joint" type="fixed">
+        <parent link="${camera_name}_link"/>
+        <child link="${camera_name}_link_optical"/>
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
-    <link name="camera_link_optical"></link>
+    <link name="${camera_name}_link_optical"></link>
 
-    <gazebo reference="camera_link">
+    <gazebo reference="${camera_name}_link">
         <material>Gazebo/Red</material>
 
-        <sensor name="camera" type="rgbd_camera"> <pose> 0 0 0 0 0 0 </pose>
+        <sensor name="${camera_name}" type="rgbd_camera">
+            <pose> 0 0 0 0 0 0 </pose>
             <always_on>1</always_on>
-            <update_rate>10</update_rate>
+            <update_rate>${update_rate}</update_rate>
             <visualize>true</visualize>
-            <topic>camera</topic>
-            <gz_frame_id>camera_link_optical</gz_frame_id>
+            <topic>${camera_name}</topic>
+            <gz_frame_id>${camera_name}_link_optical</gz_frame_id>
+            
             <camera>
-                <horizontal_fov>1.089</horizontal_fov>
+                <horizontal_fov>${horizontal_fov}</horizontal_fov>
                 <image>
-                    <format>R8G8B8</format> <width>640</width>
-                    <height>480</height>
+                    <format>${img_format}</format>
+                    <width>${img_width}</width>
+                    <height>${img_height}</height>
                 </image>
                 <clip>
-                    <near>0.05</near>
-                    <far>8.0</far>
+                    <near>${near_clip}</near>
+                    <far>${far_clip}</far>
                 </clip>
-                </camera>
+                
+                <noise>
+                    <type>gaussian</type>
+                    <mean>${noise_mean}</mean>
+                    <stddev>${noise_stddev}</stddev>
+                </noise>
+
+                <lens>
+                    <intrinsics>
+                        <fx>${focal_length}</fx>
+                        <fy>${focal_length}</fy>
+                        <cx>${img_width/2}</cx>
+                        <cy>${img_height/2}</cy>
+                        <s>0</s>
+                    </intrinsics>
+                    <distortion>
+                        <k1>${distortion_k1}</k1>
+                        <k2>${distortion_k2}</k2>
+                        <k3>0.0</k3>
+                        <p1>0.0</p1>
+                        <p2>0.0</p2>
+                        <center>0.5 0.5</center>
+                    </distortion>
+                </lens>
+            </camera>
         </sensor>
     </gazebo>
-
 </robot>
