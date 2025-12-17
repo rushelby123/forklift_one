@@ -27,7 +27,7 @@ ackermann_steering_controller:
     # ─────────────────────────────
     wheelbase: 0.215
     traction_track_width: 0.150
-    rear_wheel_track: 0.140
+    steering_track_width: 0.140
     traction_wheels_radius: 0.0425
     steering_wheels_radius: 0.0375
 
